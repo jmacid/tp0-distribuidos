@@ -6,7 +6,6 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
     volumes:
@@ -18,7 +17,83 @@ services:
     entrypoint: /client
     environment:
       - CLI_ID=1
-      - CLI_LOG_LEVEL=DEBUG
+      - NOMBRE=Nombre1
+      - APELLIDO=Apellido1
+      - DOCUMENTO=11111111
+      - NACIMIENTO=1991-01-01
+      - NUMERO=111
+    networks:
+      - testing_net
+    depends_on:
+      - server
+    volumes:
+      - ./client/config.yaml:/config.yaml
+  
+  client2:
+    container_name: client2
+    image: client:latest
+    entrypoint: /client
+    environment:
+      - CLI_ID=2
+      - NOMBRE=Nombre2
+      - APELLIDO=Apellido2
+      - DOCUMENTO=22222222
+      - NACIMIENTO=1992-02-02
+      - NUMERO=222
+    networks:
+      - testing_net
+    depends_on:
+      - server
+    volumes:
+      - ./client/config.yaml:/config.yaml
+  
+  client3:
+    container_name: client3
+    image: client:latest
+    entrypoint: /client
+    environment:
+      - CLI_ID=3
+      - NOMBRE=Nombre3
+      - APELLIDO=Apellido3
+      - DOCUMENTO=333333333
+      - NACIMIENTO=1993-03-03
+      - NUMERO=333
+    networks:
+      - testing_net
+    depends_on:
+      - server
+    volumes:
+      - ./client/config.yaml:/config.yaml
+  
+  client4:
+    container_name: client4
+    image: client:latest
+    entrypoint: /client
+    environment:
+      - CLI_ID=4
+      - NOMBRE=Nombre4
+      - APELLIDO=Apellido4
+      - DOCUMENTO=44444444
+      - NACIMIENTO=1994-04-04
+      - NUMERO=444
+    networks:
+      - testing_net
+    depends_on:
+      - server
+    volumes:
+      - ./client/config.yaml:/config.yaml
+  
+  client5:
+    container_name: client5
+    image: client:latest
+    entrypoint: /client
+    environment:
+      - CLI_ID=5
+      - NOMBRE=Nombre5
+      - APELLIDO=Apellido5
+      - DOCUMENTO=55555555
+      - NACIMIENTO=1995-05-05
+      - NUMERO=555
     networks:
       - testing_net
     depends_on:
