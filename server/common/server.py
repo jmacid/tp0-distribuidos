@@ -8,6 +8,13 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+    
+    def __exit__(self, exc_type, exc, tb):
+        if self._server_socket:
+            self._server_socket.shutdown(socket.SHUT_RDWR)
+            self._server_socket.close()
+            logging.info('action: closing_server_socket | result: success')
+            
 
     def run(self):
         """

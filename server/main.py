@@ -4,7 +4,13 @@ from configparser import ConfigParser
 from common.server import Server
 import logging
 import os
+import signal
+import sys
 
+
+def handle_sigterm(signum, frame):
+    logging.info(f"action: handle sigterm | result: success")
+    sys.exit(0)
 
 def initialize_config():
     """ Parse env variables or config file to find program config params
@@ -63,6 +69,7 @@ def initialize_log(logging_level):
         level=logging_level,
         datefmt='%Y-%m-%d %H:%M:%S',
     )
+    signal.signal(signal.SIGTERM, handle_sigterm)
 
 
 if __name__ == "__main__":
