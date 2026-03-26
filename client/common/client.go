@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 
 var log = logging.MustGetLogger("log")
 
-// ClientConfig Configuration used by the client
 type ClientConfig struct {
 	ID             string
 	ServerAddress  string
@@ -23,7 +23,6 @@ type ClientConfig struct {
 	BatchMaxAmount int
 }
 
-// Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
 	conn   net.Conn
@@ -39,8 +38,6 @@ type Bet struct {
 	BetNum   string
 }
 
-// NewClient Initializes a new client receiving the configuration
-// as a parameter
 func NewClient(config ClientConfig, bets []Bet) *Client {
 	client := &Client{
 		config: config,
@@ -61,9 +58,6 @@ func NewClient(config ClientConfig, bets []Bet) *Client {
 	return client
 }
 
-// CreateClientSocket Initializes client socket. In case of
-// failure, error is printed in stdout/stderr and exit 1
-// is returned
 func (c *Client) createClientSocket() error {
 	conn, err := net.Dial("tcp", c.config.ServerAddress)
 	if err != nil {
@@ -77,12 +71,11 @@ func (c *Client) createClientSocket() error {
 	return nil
 }
 
-// StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
 	totalBets := len(c.bets)
 	batchSize := c.config.BatchMaxAmount
 	if batchSize <= 0 {
-		batchSize = 100 // Valor por defecto seguro para no exceder 8kB
+		batchSize = 100
 	}
 
 	for i := 0; i < totalBets; i += batchSize {
@@ -94,8 +87,11 @@ func (c *Client) StartClientLoop() {
 		batch := c.bets[i:end]
 		if err := c.sendBatch(batch); err != nil {
 			log.Errorf("action: send_batch | result: fail | error: %v", err)
-			// Dependiendo de la consigna, podrías reintentar o continuar
 		}
+	}
+
+	if err := c.ConsultarGanadores(); err != nil {
+		log.Errorf("action: consulta_ganadores | result: fail | error: %v", err)
 	}
 }
 
@@ -105,7 +101,6 @@ func (c *Client) sendBatch(batch []Bet) error {
 	}
 	defer c.conn.Close()
 
-	// 1. Enviar todas las apuestas del lote
 	for _, bet := range batch {
 		msg := createBetMessage(bet)
 		if err := c.sendMessage(c.conn, msg); err != nil {
@@ -113,12 +108,10 @@ func (c *Client) sendBatch(batch []Bet) error {
 		}
 	}
 
-	// 2. Enviar marcador de fin de lote para que el servidor procese
 	if err := c.sendMessage(c.conn, "END_BATCH\n"); err != nil {
 		return err
 	}
 
-	// 3. Leer la respuesta del servidor (ACK o ERR)
 	reader := bufio.NewReader(c.conn)
 	response, err := reader.ReadString('\n')
 	if err != nil {
@@ -130,6 +123,36 @@ func (c *Client) sendBatch(batch []Bet) error {
 	}
 
 	log.Infof("action: batch_sent | result: success | cantidad: %d", len(batch))
+	return nil
+}
+
+func (c *Client) ConsultarGanadores() error {
+	if err := c.createClientSocket(); err != nil {
+		return err
+	}
+	defer c.conn.Close()
+
+	msg := fmt.Sprintf("FIN_AGENCIA,%s\n", c.config.ID)
+	if err := c.sendMessage(c.conn, msg); err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(c.conn)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("error leyendo respuesta ganadores: %v", err)
+	}
+
+	response = strings.TrimSpace(response)
+	var cant int
+	if response == "" {
+		cant = 0
+	} else {
+		ganadores := strings.Split(response, ",")
+		cant = len(ganadores)
+	}
+
+	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %d", cant)
 	return nil
 }
 

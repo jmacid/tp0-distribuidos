@@ -18,6 +18,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - CLIENTS=$NUM_CLIENTS
     networks:
       - testing_net
     volumes:
@@ -34,11 +35,6 @@ for i in $(seq 1 "$NUM_CLIENTS"); do
     entrypoint: /client
     environment:
       - CLI_ID=$i
-      - NOMBRE=Nombre$i
-      - APELLIDO=Apellido$i
-      - DOCUMENTO=$i$i$i$i$i$i$i$i
-      - NACIMIENTO=199$i-0$i-0$i
-      - NUMERO=$i$i$i$i
     networks:
       - testing_net
     depends_on:

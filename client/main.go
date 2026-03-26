@@ -141,7 +141,6 @@ func GetAgencyBets(id string) ([]common.Bet, error) {
 	for {
 		record, err := reader.Read()
 
-		// Check for the end of the file (EOF)
 		if err == io.EOF {
 			break
 		}
@@ -158,8 +157,6 @@ func GetAgencyBets(id string) ([]common.Bet, error) {
 			BetNum:   record[4],
 		}
 		bets = append(bets, bet)
-
-		fmt.Printf("Row: %v\n", record)
 	}
 
 	return bets, nil
