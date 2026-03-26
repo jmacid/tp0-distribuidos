@@ -180,6 +180,27 @@ Las funciones `load_bets(...)` y `has_won(...)` son provistas por la cátedra y 
 
 No es correcto realizar un broadcast de todos los ganadores hacia todas las agencias, se espera que se informen los DNIs ganadores que correspondan a cada una de ellas.
 
+
+#### Resolucion
+Se modifico el servidor para que sea capaz que manejar multiples conexiones simultaneamente. Para ello utilizo hilos para atender cada cliente y se utilizan el mecanismo de sincronizacion Barrera para que las agencias que ya terminaron esperan hasta la ultima agencia termine de enviar sus apuestas. Ademas para proteger la escritura en el archivo se utlizan lock.
+
+Para el caso del cliente se ejecuta la consulta de ganadores una vez que se finaliza el envio del lote de apuestas.
+
+Por ultimo, para saber cuantas agencias estan activas, se utiliza la variable de entorno `CLIENTS`.
+
+Para ejecutarlo se genera el archivo de configuracion:
+
+```
+./generar-compose.sh docker-compose-dev.yaml 5
+```
+
+Luego, corremos los contenedores:
+
+```
+make docker-compose-up
+```
+
+
 ## Parte 3: Repaso de Concurrencia
 En este ejercicio es importante considerar los mecanismos de sincronización a utilizar para el correcto funcionamiento de la persistencia.
 
