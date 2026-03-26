@@ -270,6 +270,25 @@ La cantidad máxima de apuestas dentro de cada _batch_ debe ser configurable des
 
 Por su parte, el servidor deberá responder con éxito solamente si todas las apuestas del _batch_ fueron procesadas correctamente.
 
+#### Resolucion
+Primero se modifican los clientes para poder leer las apuestas del archivo. Este se leer linea por linea y se van creando `Bet`s. Para el envio se serializa y se envian por lotes de un tamaño maximo de `maxAmount`. Una vez que se envian todas las apuestas, es decir, el batch, se finaliza con el envio de `END_BATCH`.
+
+El servidor recibe los mensajes y los deserializan, luego son almacenados utilizando la funcion `store_bets` provista por la catedra. 
+
+
+Para ejecutarlo se genera el archivo de configuracion:
+
+```
+./generar-compose.sh docker-compose-dev.yaml 5
+```
+
+Luego, corremos los contenedores:
+
+```
+make docker-compose-up
+```
+
+
 ### Ejercicio N°7:
 
 Modificar los clientes para que notifiquen al servidor al finalizar con el envío de todas las apuestas y así proceder con el sorteo.
