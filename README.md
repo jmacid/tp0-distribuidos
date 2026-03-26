@@ -149,7 +149,9 @@ Por su parte, el servidor deberá responder con éxito solamente si todas las ap
 
 
 #### Resolucion
-Primero se modifican los clientes para poder leer las apuestas del archivo. Este se leer linea por linea y se van creando `Bet`s
+Primero se modifican los clientes para poder leer las apuestas del archivo. Este se leer linea por linea y se van creando `Bet`s. Para el envio se serializa y se envian por lotes de un tamaño maximo de `maxAmount`. Una vez que se envian todas las apuestas, es decir, el batch, se finaliza con el envio de `END_BATCH`.
+
+El servidor recibe los mensajes y los deserializan, luego son almacenados utilizando la funcion `store_bets` provista por la catedra. 
 
 
 Para ejecutarlo se genera el archivo de configuracion:
