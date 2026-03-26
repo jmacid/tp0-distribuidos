@@ -188,6 +188,22 @@ En este ejercicio es importante considerar los mecanismos de sincronización a u
 
 Modificar el servidor para que permita aceptar conexiones y procesar mensajes en paralelo. En caso de que el alumno implemente el servidor en Python utilizando _multithreading_,  deberán tenerse en cuenta las [limitaciones propias del lenguaje](https://wiki.python.org/moin/GlobalInterpreterLock).
 
+#### Resolucion
+A pesar de estar utilizando hilos, la realidad es que esos hilos no se ejecutaban en paralelo real, sino de forma concurrente. Para lograr un paralelismo real y poder procesar mensajes en multiples nucleos del procesador, tenemos utilizar procesos. Ademas, para que los procesos se puedan compartir informacion, como que agencia es la ganadora, se utiliza `multiprocessing.Manager`.
+
+
+Para ejecutarlo se genera el archivo de configuracion:
+
+```
+./generar-compose.sh docker-compose-dev.yaml 5
+```
+
+Luego, corremos los contenedores:
+
+```
+make docker-compose-up
+```
+
 ## Condiciones de Entrega
 Se espera que los alumnos realicen un _fork_ del presente repositorio para el desarrollo de los ejercicios y que aprovechen el esqueleto provisto tanto (o tan poco) como consideren necesario.
 
