@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -20,7 +22,7 @@ var log = logging.MustGetLogger("log")
 // config file ./config.yaml. Environment variables takes precedence over parameters
 // defined in the configuration file. If some of the variables cannot be parsed,
 // an error is returned
-func InitConfig() (*viper.Viper, *common.Bet, error) {
+func InitConfig() (*viper.Viper, error) {
 	v := viper.New()
 
 	// Configure viper to read env variables with the CLI_ prefix
@@ -50,26 +52,12 @@ func InitConfig() (*viper.Viper, *common.Bet, error) {
 	// Parse time.Duration variables and return an error if those variables cannot be parsed
 
 	if _, err := time.ParseDuration(v.GetString("loop.period")); err != nil {
-		return nil, nil, errors.Wrapf(err, "Could not parse CLI_LOOP_PERIOD env var as time.Duration.")
+		return nil, errors.Wrapf(err, "Could not parse CLI_LOOP_PERIOD env var as time.Duration.")
 	}
 
-	bet_agencyId := os.Getenv("CLI_ID")
-	bet_name := os.Getenv("NOMBRE")
-	bet_surname := os.Getenv("APELLIDO")
-	bet_dni := os.Getenv("DOCUMENTO")
-	bet_dob := os.Getenv("NACIMIENTO")
-	bet_betNum := os.Getenv("NUMERO")
+	v.BindEnv("batch", "maxAmount")
 
-	bet := &common.Bet{
-		AgencyId: bet_agencyId,
-		Name:     bet_name,
-		Surname:  bet_surname,
-		Dni:      bet_dni,
-		Dob:      bet_dob,
-		BetNum:   bet_betNum,
-	}
-
-	return v, bet, nil
+	return v, nil
 }
 
 // InitLogger Receives the log level to be set in go-logging as a string. This method
@@ -107,7 +95,7 @@ func PrintConfig(v *viper.Viper) {
 }
 
 func main() {
-	v, bet, err := InitConfig()
+	v, err := InitConfig()
 	if err != nil {
 		log.Criticalf("%s", err)
 	}
@@ -120,12 +108,60 @@ func main() {
 	PrintConfig(v)
 
 	clientConfig := common.ClientConfig{
-		ServerAddress: v.GetString("server.address"),
-		ID:            v.GetString("id"),
-		LoopAmount:    v.GetInt("loop.amount"),
-		LoopPeriod:    v.GetDuration("loop.period"),
+		ServerAddress:  v.GetString("server.address"),
+		ID:             v.GetString("id"),
+		LoopAmount:     v.GetInt("loop.amount"),
+		LoopPeriod:     v.GetDuration("loop.period"),
+		BatchMaxAmount: v.GetInt("batch.maxAmount"),
 	}
 
-	client := common.NewClient(clientConfig, *bet)
+	bets, err := GetAgencyBets(v.GetString("id"))
+	if err != nil {
+		log.Criticalf("%s", err)
+	}
+
+	client := common.NewClient(clientConfig, bets)
 	client.StartClientLoop()
+}
+
+func GetAgencyBets(id string) ([]common.Bet, error) {
+	file, err := os.Open("agency.csv")
+
+	if err != nil {
+		log.Errorf("action: read_agency_file | result: fail | error: %v",
+			err,
+		)
+		return nil, err
+	}
+
+	reader := csv.NewReader(file)
+
+	var bets []common.Bet
+
+	for {
+		record, err := reader.Read()
+
+		// Check for the end of the file (EOF)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Errorf("action: read_agency_line | result: fail | error: %v", err)
+		}
+
+		bet := common.Bet{
+			AgencyId: id,
+			Name:     record[0],
+			Surname:  record[1],
+			Dni:      record[2],
+			Dob:      record[3],
+			BetNum:   record[4],
+		}
+		bets = append(bets, bet)
+
+		fmt.Printf("Row: %v\n", record)
+	}
+
+	return bets, nil
+
 }
