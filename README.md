@@ -119,6 +119,35 @@ make docker-compose-up
 ### Ejercicio N°2:
 Modificar el cliente y el servidor para lograr que realizar cambios en el archivo de configuración no requiera reconstruír las imágenes de Docker para que los mismos sean efectivos. La configuración a través del archivo correspondiente (`config.ini` y `config.yaml`, dependiendo de la aplicación) debe ser inyectada en el container y persistida por fuera de la imagen (hint: `docker volumes`).
 
+#### Resolucion
+Para evitar que se reconstruya la imagen de docker cada vez que se modifican los archivos de configuracion hay que evitar que esos archivos se copien a las imagenes. Cada vez que esos archivos se modifican se crea una nueva layer de docker, entonces al no incluirla se evita que se vuelva a reconstruir. Sin embargo, necesitamos el archivo dentro del contenedor, para ello se crea un volumen en cada contenedor que matchea uno a uno con el archivo. De esta manera el archivo se incluye en el contenedor pero se excluye del building de la imagen.
+Para excluirlo de crea el archivo `.dockerignore` y se agregan las siguientes lineas:
+```
+server/config.ini
+client/config.yaml
+```
+
+Para incluir el archivo en el volumen se agregan las siguientes lineas en el archivo de generacion del archivo de configuracion:
+```
+server:
+    volumes:
+        - ./server/config.ini:/config.ini
+client:
+    volumes:
+        - ./client/config.yaml:/config.yaml
+```
+
+Para ejectuar el proyecto primero se genera el archivo de configuracion:
+
+```
+./generar-compose.sh docker-compose-dev.yaml 5
+```
+
+Finalmente, para ejecutar el codigo corremos:
+
+```
+make docker-compose-up
+```
 
 ### Ejercicio N°3:
 Crear un script de bash `validar-echo-server.sh` que permita verificar el correcto funcionamiento del servidor utilizando el comando `netcat` para interactuar con el mismo. Dado que el servidor es un echo server, se debe enviar un mensaje al servidor y esperar recibir el mismo mensaje enviado.
