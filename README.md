@@ -133,6 +133,33 @@ Se deberá implementar un módulo de comunicación entre el cliente y el servido
 * Correcta separación de responsabilidades entre modelo de dominio y capa de comunicación.
 * Correcto empleo de sockets, incluyendo manejo de errores y evitando los fenómenos conocidos como [_short read y short write_](https://cs61.seas.harvard.edu/site/2018/FileDescriptors/).
 
+#### Resolucion
+Para enviar apuestas se crea la estructura `Bet` con los siguientes atributos:
+* CLI_ID
+* NOMBRE
+* APELLIDO
+* DOCUMENTO
+* NACIMIENTO
+* NUMERO
+
+Esta informacion la toman los clientes de las variables de entorno, se formatean y se envia al servidor. La informacion se envia separadas por coma (`,`) y se le agrega el fin de lina (`\n`). Por ejemplo: `NOMBRE,APELLIDO,DOCUMENTO,NACIMIENTO,NUMERO\n`.
+
+El mensaje es recibido por el servidor quien lo reconstruye y responde con un ack en caso de exito.
+
+Para el manejo de Short Reads/Writes el método `Write` de Go para sockets TCP ya maneja el envío del buffer completo o devuelve un error si la conexión se interrumpe. Para el servidor usamos `sendall()` en lugar de `send()`. sendall continúa enviando datos hasta que todo el mensaje se haya transmitido o ocurra un error.
+
+
+Para ejecutarlo se genera el archivo de configuracion:
+
+```
+./generar-compose.sh docker-compose-dev.yaml 5
+```
+
+Luego, corremos los contenedores:
+
+```
+make docker-compose-up
+```
 
 ### Ejercicio N°6:
 Modificar los clientes para que envíen varias apuestas a la vez (modalidad conocida como procesamiento por _chunks_ o _batchs_). 
