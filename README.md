@@ -156,6 +156,27 @@ En caso de que la validación sea exitosa imprimir: `action: test_echo_server | 
 
 El script deberá ubicarse en la raíz del proyecto. Netcat no debe ser instalado en la máquina _host_ y no se pueden exponer puertos del servidor para realizar la comunicación (hint: `docker network`). `
 
+#### Resolucion
+Para evitar instalar netcat, se puede utilizar una imagen de docker y correr el programa dentro de el. Para poder realizar los tests, ademas, es necesario ponerlo en la misma red que el proyecto del trabajo practico, particualarmente con el server. Docker por defecto, crea una red con el nombre del proyecto (`tp0`) y del nombre de la red que se define en cada contenedor (`testing_net`).
+
+Para la solucion se crea el archivo `validar-echo-server.sh`. Este toma el nombre y puerto del archivo de configuracion del servidor (`./server/config.ini`) y le envia un mensaje de prueba al servidor. Luego recibe la respuesta, que al ser un *echo server* deberia recibir el mismo mensaje. Si asi lo es, imprime por consola `action: test_echo_server | result: success`, caso contrario `action: test_echo_server | result: fail`.
+
+Para ejecutarlo primero se genera el archivo de configuracion:
+
+```
+./generar-compose.sh docker-compose-dev.yaml 5
+```
+
+Luego, corremos los contenedores:
+
+```
+make docker-compose-up
+```
+
+Y finalmente ejecutamos el script:
+```
+./validar-echo-server.sh
+```
 
 ### Ejercicio N°4:
 Modificar servidor y cliente para que ambos sistemas terminen de forma _graceful_ al recibir la signal SIGTERM. Terminar la aplicación de forma _graceful_ implica que todos los _file descriptors_ (entre los que se encuentran archivos, sockets, threads y procesos) deben cerrarse correctamente antes que el thread de la aplicación principal muera. Loguear mensajes en el cierre de cada recurso (hint: Verificar que hace el flag `-t` utilizado en el comando `docker compose down`).
